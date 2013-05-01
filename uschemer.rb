@@ -19,7 +19,7 @@ module USchemeR
     end
 
     def eval_func(exp)
-      args = eval_args(cdr(exp))
+      args = eval_list(cdr(exp))
       func = eval(car(exp))
       apply_func(func, args)
     end
@@ -36,8 +36,8 @@ module USchemeR
       end
     end
 
-    def eval_args(args)
-      args.map {|arg| eval(arg)}
+    def eval_list(list)
+      list.map {|item| eval(item)}
     end
 
     def find_func(symbol)
