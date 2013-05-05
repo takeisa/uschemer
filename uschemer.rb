@@ -2,46 +2,118 @@
 # -*- coding: utf-8 -*-
 
 module USchemeR
-  class << self
     FUNCS = {
-      :+ => lambda {|x, y| x + y},
-      :- => lambda {|x, y| x - y},
-      :* => lambda {|x, y| x * y},
-      :/ => lambda {|x, y| x / y}
+      :+ => [:built_in, lambda {|x, y| x + y}],
+      :- => [:built_in, lambda {|x, y| x - y}],
+      :* => [:built_in, lambda {|x, y| x * y}],
+      :/ => [:built_in, lambda {|x, y| x / y}]
     }
 
-    def eval(exp)
+  class << self
+    def eval(exp, env)
       if list?(exp)
-        eval_func(exp)
+        if special_form?(exp) then
+          eval_special_form(exp, env)
+        else
+          eval_func(exp, env)
+        end
       else
-        eval_value(exp)
+        if immidiate_value?(exp) then
+          exp
+        else
+          lookup_var(exp, env)
+        end
       end
     end
 
-    def eval_func(exp)
-      args = eval_list(cdr(exp))
-      func = eval(car(exp))
-      apply_func(func, args)
-    end
-
-    def apply_func(func, args)
-      func.call(*args)
-    end
-
-    def eval_value(value)
-      if number?(value)
-        value
-      else
-        find_func(value)
+    def eval_special_form(exp, env)
+      if lambda?(exp) then
+        eval_lambda(exp, env)
       end
     end
 
-    def eval_list(list)
-      list.map {|item| eval(item)}
+    def eval_lambda(exp, env)
+      create_closure(exp, env)
     end
 
-    def find_func(symbol)
-      FUNCS[symbol]
+    def create_closure(exp, env)
+      params, body = lambda_params_body(exp)
+      [:closure, params, body, env]
+    end
+
+    def lambda_params_body(exp)
+      [exp[1], exp[2]]
+    end
+
+    def special_form?(exp)
+      lambda?(exp)
+    end
+
+    def lambda?(exp)
+      :lambda == car(exp)
+    end
+
+    def immidiate_value?(exp)
+      number?(exp)
+    end
+
+    def lookup_var(exp, env)
+      var_hash = env.find {|h| h.key?(exp)}
+      if var_hash.nil? then
+        raise "undefined variable: #{exp}"
+      end
+      var_hash[exp]
+    end
+
+    def eval_func(exp, env)
+      func = eval(car(exp), env)
+      if func.nil? then
+        raise "call nil func: #{exp}"
+      end
+
+      args = eval_list(cdr(exp), env)
+
+      if built_in?(func) then
+        func_apply(func, args)
+      else
+        lambda_apply(func, args)
+      end
+    end
+
+    def built_in?(func)
+      func[0] == :built_in
+    end
+
+    def func_apply(func, args)
+      func[1].call(*args)
+    end
+
+    def lambda_apply(func, args)
+      params, body, env = closure_params_body_env(func)
+      new_env = extend_env(params, args, env)
+      eval(body, new_env)
+    end
+
+    def closure_params_body_env(func)
+      func[1..3]
+    end
+
+    def extend_env(params, args, env)
+      bind_hash = create_bind_hash(params, args)
+      [bind_hash] + env
+    end
+
+    def create_bind_hash(params, args)
+      bind_list = params.zip(args)
+      bind_hash = {}
+      bind_list.each do |bind|
+        bind_hash[bind[0]] = bind[1]
+      end
+      bind_hash
+    end
+
+    def eval_list(list, env)
+      list.map {|item| eval(item, env)}
     end
 
     def list?(exp)
@@ -66,21 +138,25 @@ end
 
 require "pp"
 
-def eval_print(exp)
+def eval_print(exp, env)
   print PP.pp(exp, '').chomp
-  result = USchemeR.eval(exp)
+  result = USchemeR.eval(exp, env)
   print " #=> "
   print PP.pp(result, '')
   print "\n"
 end
 
-eval_print(1)
+env = [USchemeR::FUNCS]
 
-eval_print(:+)
-
-eval_print([:+, 1, 2])
-
-eval_print([:+, [:+, 1, 2], [:+, 3, 4]])
-
-
+# eval_print(1, env)
+# eval_print(:+, env)
+# eval_print([:+, 1, 2], env)
+# eval_print([:+, [:+, 1, 2], [:+, 3, 4]], env)
+eval_print([:+, :x, :y], [{:x => 123, :y => 456}] + env)
+eval_print([:lambda, [:x, :y], [:+, :x, :y]], env)
+eval_print([[:lambda, [:x, :y], [:+, :x, :y]], 1, 2], env)
+eval_print(
+  [[[:lambda, [:y], [:lambda, [:x], [:+, :x, :y]]], 5], 10],
+  env
+)
 
