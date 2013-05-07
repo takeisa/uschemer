@@ -29,6 +29,8 @@ module USchemeR
     def eval_special_form(exp, env)
       if lambda?(exp) then
         eval_lambda(exp, env)
+      elsif let?(exp) then
+        eval_let(exp, env)
       end
     end
 
@@ -45,12 +47,30 @@ module USchemeR
       [exp[1], exp[2]]
     end
 
+    def eval_let(exp, env)
+      params, body, values = let_params_body_values(exp)
+      new_exp = [[:lambda, params, body], *values]
+      eval(new_exp, env)
+    end
+
+    def let_params_body_values(exp)
+      bind_list = exp[1]
+      params = bind_list.map {|bind| bind[0]}
+      values = bind_list.map {|bind| bind[1]}
+      body = exp[2]
+      [params, body, values]
+    end
+
     def special_form?(exp)
-      lambda?(exp)
+      lambda?(exp) || let?(exp)
     end
 
     def lambda?(exp)
-      :lambda == car(exp)
+      car(exp) == :lambda
+    end
+
+    def let?(exp)
+      car(exp) == :let
     end
 
     def immidiate_value?(exp)
@@ -152,11 +172,14 @@ env = [USchemeR::FUNCS]
 # eval_print(:+, env)
 # eval_print([:+, 1, 2], env)
 # eval_print([:+, [:+, 1, 2], [:+, 3, 4]], env)
-eval_print([:+, :x, :y], [{:x => 123, :y => 456}] + env)
-eval_print([:lambda, [:x, :y], [:+, :x, :y]], env)
-eval_print([[:lambda, [:x, :y], [:+, :x, :y]], 1, 2], env)
-eval_print(
-  [[[:lambda, [:y], [:lambda, [:x], [:+, :x, :y]]], 5], 10],
-  env
-)
+# eval_print([:+, :x, :y], [{:x => 123, :y => 456}] + env)
+# eval_print([:lambda, [:x, :y], [:+, :x, :y]], env)
+# eval_print([[:lambda, [:x, :y], [:+, :x, :y]], 1, 2], env)
+# eval_print(
+#   [[[:lambda, [:y], [:lambda, [:x], [:+, :x, :y]]], 5], 10],
+#   env
+# )
 
+eval_print([:let, [[:a, 1], [:b, 2]], [:+, :a, :b]], env)
+eval_print([:let, [[:a, 1]], [:lambda, [:x], [:+, :a, :x]]], env)
+eval_print([[:let, [[:a, 1]], [:lambda, [:x], [:+, :a, :x]]], 2], env)
