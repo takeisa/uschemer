@@ -151,6 +151,14 @@ module USchemeR
     def cdr(exp)
       exp[1..-1]
     end
+
+    def parse(sexp)
+      sexp.gsub!(/[_a-zA-Z\+\*\-\/][_a-zA-Z0-9\+\*\-\/]*/, ':\\0')
+      sexp.gsub!(/\s+/, ',')
+      sexp.gsub!(/\(/, '[')
+      sexp.gsub!(/\)/, ']')
+      Kernel.eval(sexp)
+    end
   end
 end
 
@@ -158,9 +166,9 @@ end
 
 require "pp"
 
-def eval_print(exp, env)
-  print PP.pp(exp, '').chomp
-  result = USchemeR.eval(exp, env)
+def eval_print(sexp, env)
+  print sexp
+  result = USchemeR.eval(USchemeR.parse(sexp), env)
   print " #=> "
   print PP.pp(result, '')
   print "\n"
@@ -168,18 +176,6 @@ end
 
 env = [USchemeR::FUNCS]
 
-# eval_print(1, env)
-# eval_print(:+, env)
-# eval_print([:+, 1, 2], env)
-# eval_print([:+, [:+, 1, 2], [:+, 3, 4]], env)
-# eval_print([:+, :x, :y], [{:x => 123, :y => 456}] + env)
-# eval_print([:lambda, [:x, :y], [:+, :x, :y]], env)
-# eval_print([[:lambda, [:x, :y], [:+, :x, :y]], 1, 2], env)
-# eval_print(
-#   [[[:lambda, [:y], [:lambda, [:x], [:+, :x, :y]]], 5], 10],
-#   env
-# )
-
-eval_print([:let, [[:a, 1], [:b, 2]], [:+, :a, :b]], env)
-eval_print([:let, [[:a, 1]], [:lambda, [:x], [:+, :a, :x]]], env)
-eval_print([[:let, [[:a, 1]], [:lambda, [:x], [:+, :a, :x]]], 2], env)
+eval_print("(let ((a 1) (b 1)) (+ a b))", env)
+eval_print("(let ((a 1)) (lambda (x) (+ a x)))", env)
+eval_print("((let ((a 1)) (lambda (x) (+ a x))) 2)", env)
