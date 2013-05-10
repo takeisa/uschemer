@@ -39,21 +39,21 @@ module USchemeR
     end
 
     def create_closure(exp, env)
-      params, body = lambda_params_body(exp)
+      params, body = lambda_to_params_body(exp)
       [:closure, params, body, env]
     end
 
-    def lambda_params_body(exp)
+    def lambda_to_params_body(exp)
       [exp[1], exp[2]]
     end
 
     def eval_let(exp, env)
-      params, body, values = let_params_body_values(exp)
+      params, body, values = let_to_params_body_values(exp)
       new_exp = [[:lambda, params, body], *values]
       eval(new_exp, env)
     end
 
-    def let_params_body_values(exp)
+    def let_to_params_body_values(exp)
       bind_list = exp[1]
       params = bind_list.map {|bind| bind[0]}
       values = bind_list.map {|bind| bind[1]}
