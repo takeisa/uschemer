@@ -2,12 +2,22 @@
 # -*- coding: utf-8 -*-
 
 module USchemeR
-    FUNCS = {
-      :+ => [:built_in, lambda {|x, y| x + y}],
-      :- => [:built_in, lambda {|x, y| x - y}],
-      :* => [:built_in, lambda {|x, y| x * y}],
-      :/ => [:built_in, lambda {|x, y| x / y}]
-    }
+  FUNCS = {
+    :+ => [:built_in, lambda {|x, y| x + y}],
+    :- => [:built_in, lambda {|x, y| x - y}],
+    :* => [:built_in, lambda {|x, y| x * y}],
+    :'/' => [:built_in, lambda {|x, y| x / y}],
+    :'=' => [:built_in, lambda {|x, y| x == y}],
+    :< => [:built_in, lambda {|x, y| x < y}],
+    :> => [:built_in, lambda {|x, y| x > y}],
+    :<= => [:built_in, lambda {|x, y| x <= y}],
+    :>= => [:built_in, lambda {|x, y| x >= y}]
+  }
+
+  KEYWORDS = {
+    :true => true,
+    :false => false
+  }
 
   class << self
     def eval(exp, env)
@@ -31,6 +41,8 @@ module USchemeR
         eval_lambda(exp, env)
       elsif let?(exp) then
         eval_let(exp, env)
+      elsif if?(exp) then
+        eval_if(exp, env)
       end
     end
 
@@ -61,8 +73,21 @@ module USchemeR
       [params, body, values]
     end
 
+    def eval_if(exp, env)
+      test_form, then_form, else_form = if_to_test_then_else(exp)
+      if eval(test_form, env) then
+        eval(then_form, env)
+      else
+        eval(else_form, env)
+      end
+    end
+
+    def if_to_test_then_else(exp)
+      [exp[1], exp[2], exp[3]]
+    end
+
     def special_form?(exp)
-      lambda?(exp) || let?(exp)
+      lambda?(exp) || let?(exp) || if?(exp)
     end
 
     def lambda?(exp)
@@ -71,6 +96,10 @@ module USchemeR
 
     def let?(exp)
       car(exp) == :let
+    end
+
+    def if?(exp)
+      car(exp) == :if
     end
 
     def immidiate_value?(exp)
@@ -153,7 +182,7 @@ module USchemeR
     end
 
     def parse(sexp)
-      sexp.gsub!(/[_a-zA-Z\+\*\-\/][_a-zA-Z0-9\+\*\-\/]*/, ':\\0')
+      sexp.gsub!(/[_a-zA-Z\+\*\-\/<>][_a-zA-Z0-9\+\*\-\/<>]*/, ':\\0')
       sexp.gsub!(/\s+/, ',')
       sexp.gsub!(/\(/, '[')
       sexp.gsub!(/\)/, ']')
@@ -166,16 +195,21 @@ end
 
 require "pp"
 
-def eval_print(sexp, env)
+@env = [USchemeR::KEYWORDS, USchemeR::FUNCS]
+
+def eval_print(sexp)
   print sexp
-  result = USchemeR.eval(USchemeR.parse(sexp), env)
+  result = USchemeR.eval(USchemeR.parse(sexp), @env)
   print " #=> "
   print PP.pp(result, '')
   print "\n"
 end
 
-env = [USchemeR::FUNCS]
+# eval_print("(let ((a 1) (b 1)) (+ a b))")
+# eval_print("(let ((a 1)) (lambda (x) (+ a x)))")
+# eval_print("((let ((a 1)) (lambda (x) (+ a x))) 2)")
 
-eval_print("(let ((a 1) (b 1)) (+ a b))", env)
-eval_print("(let ((a 1)) (lambda (x) (+ a x)))", env)
-eval_print("((let ((a 1)) (lambda (x) (+ a x))) 2)", env)
+eval_print("(if true 1 2)")
+eval_print("(if false 1 3)")
+eval_print("(if (< 1 2) 1 2)")
+eval_print("(if (> 1 2) 1 3)")
