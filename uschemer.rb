@@ -182,6 +182,7 @@ module USchemeR
     end
 
     def parse(sexp)
+      sexp.strip!
       sexp.gsub!(/[_a-zA-Z\+\*\-\/<>=][_a-zA-Z0-9\+\*\-\/<>=]*/, ":'\\0'")
       sexp.gsub!(/\s+/, ',')
       sexp.gsub!(/\(/, '[')
