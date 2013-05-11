@@ -182,7 +182,7 @@ module USchemeR
     end
 
     def parse(sexp)
-      sexp.gsub!(/[_a-zA-Z\+\*\-\/<>][_a-zA-Z0-9\+\*\-\/<>]*/, ':\\0')
+      sexp.gsub!(/[_a-zA-Z\+\*\-\/<>=][_a-zA-Z0-9\+\*\-\/<>=]*/, ":'\\0'")
       sexp.gsub!(/\s+/, ',')
       sexp.gsub!(/\(/, '[')
       sexp.gsub!(/\)/, ']')
@@ -213,3 +213,4 @@ eval_print("(if true 1 2)")
 eval_print("(if false 1 3)")
 eval_print("(if (< 1 2) 1 2)")
 eval_print("(if (> 1 2) 1 3)")
+eval_print("(if (= 1 2) 1 3)")
