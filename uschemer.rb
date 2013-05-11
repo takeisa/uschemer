@@ -50,6 +50,8 @@ end
         eval_let(exp, env)
       elsif if?(exp) then
         eval_if(exp, env)
+      elsif letrec?(exp) then
+        eval_letrec(exp, env)
       end
     end
 
@@ -67,17 +69,16 @@ end
     end
 
     def eval_let(exp, env)
-      params, body, values = let_to_params_body_values(exp)
+      params, values, body = let_to_params_values_body(exp)
       new_exp = [[:lambda, params, body], *values]
       eval(new_exp, env)
     end
 
-    def let_to_params_body_values(exp)
+    def let_to_params_values_body(exp)
       bind_list = exp[1]
-      params = bind_list.map {|bind| bind[0]}
-      values = bind_list.map {|bind| bind[1]}
+      params, values = bind_list_to_params_values(bind_list)
       body = exp[2]
-      [params, body, values]
+      [params, values, body]
     end
 
     def eval_if(exp, env)
@@ -93,8 +94,37 @@ end
       [exp[1], exp[2], exp[3]]
     end
 
+    def eval_letrec(exp, env)
+      params, values, body = letrec_to_params_values_body(exp)
+      closures = values.map {|value| eval(value, env)}
+      new_env = extend_env(params, closures, env)
+
+      bind_hash = car(new_env)
+      closures.each {|closure| extend_closure_env!(closure, bind_hash)}
+
+      eval(body, new_env)
+    end
+
+    def extend_closure_env!(closure, bind_hash)
+      closure_env = closure[3]
+      closure_env.push(bind_hash)
+    end
+
+    def letrec_to_params_values_body(exp)
+      bind_list = exp[1]
+      params, values = bind_list_to_params_values(bind_list)
+      body = exp[2]
+      [params, values, body]
+    end
+
+    def bind_list_to_params_values(bind_list)
+      params = bind_list.map {|bind| bind[0]}
+      values = bind_list.map {|bind| bind[1]}
+      [params, values]
+    end
+
     def special_form?(exp)
-      lambda?(exp) || let?(exp) || if?(exp)
+      lambda?(exp) || let?(exp) || if?(exp) || letrec?(exp)
     end
 
     def lambda?(exp)
@@ -107,6 +137,10 @@ end
 
     def if?(exp)
       car(exp) == :if
+    end
+
+    def letrec?(exp)
+      car(exp) == :letrec
     end
 
     def immidiate_value?(exp)
@@ -215,20 +249,29 @@ require "pp"
 
 @env = [USchemeR::KEYWORDS, USchemeR::FUNCS]
 
-def eval_print(sexp)
-  print sexp
-  result = USchemeR.eval(USchemeR.parse(sexp), @env)
+def eval_print(string)
+  print string
+  exp = USchemeR.parse(string)
+  result = USchemeR.eval(exp, @env)
   print " #=> "
   print PP.pp(result, '')
   print "\n"
 end
 
-# eval_print("(let ((a 1) (b 1)) (+ a b))")
-# eval_print("(let ((a 1)) (lambda (x) (+ a x)))")
-# eval_print("((let ((a 1)) (lambda (x) (+ a x))) 2)")
+eval_print("
+(letrec ((fact 
+         (lambda (x)
+                 (if (= x 0)
+                     1
+                     (* x (fact (- x 1)))))))
+  (fact 10))
+")
 
-eval_print("(if true 1 2)")
-eval_print("(if false 1 3)")
-eval_print("(if (< 1 2) 1 2)")
-eval_print("(if (> 1 2) 1 3)")
-eval_print("(if (= 1 2) 1 3)")
+eval_print("
+(letrec ((fact 
+         (lambda (x)
+                 (if (= x 0)
+                     1
+                     (* x (fact (- x 1)))))))
+  (fact 100))
+")
