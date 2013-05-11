@@ -138,12 +138,12 @@ module USchemeR
     end
 
     def lambda_apply(func, args)
-      params, body, env = closure_params_body_env(func)
+      params, body, env = closure_to_params_body_env(func)
       new_env = extend_env(params, args, env)
       eval(body, new_env)
     end
 
-    def closure_params_body_env(func)
+    def closure_to_params_body_env(func)
       func[1..3]
     end
 
