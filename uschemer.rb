@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 module USchemeR
+  DEBUG = false
+
   FUNCS = {
     :+ => [:built_in, lambda {|x, y| x + y}],
     :- => [:built_in, lambda {|x, y| x - y}],
@@ -21,6 +23,11 @@ module USchemeR
 
   class << self
     def eval(exp, env)
+if DEBUG then
+  print "eval\n"
+  print "  env=" + PP.pp(env[0..-3], '')
+  print "  exp=" + PP.pp(exp, '')
+end
       if list?(exp)
         if special_form?(exp) then
           eval_special_form(exp, env)
@@ -115,6 +122,9 @@ module USchemeR
     end
 
     def eval_func(exp, env)
+if DEBUG then
+  print "eval_func\n"
+end
       func = eval(car(exp), env)
       if func.nil? then
         raise "call nil func: #{exp}"
@@ -140,6 +150,13 @@ module USchemeR
     def lambda_apply(func, args)
       params, body, env = closure_to_params_body_env(func)
       new_env = extend_env(params, args, env)
+if DEBUG then
+  print "lambda_apply\n"
+  print "  new_env=" + PP.pp(new_env[0..-3], '')
+  print "  closure:params=" + PP.pp(params, '')
+  print "  closure:body=" + PP.pp(body, '')
+  print "  closure:env=" + PP.pp(env[0..-3], '')
+end
       eval(body, new_env)
     end
 
