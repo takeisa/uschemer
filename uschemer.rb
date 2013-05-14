@@ -52,6 +52,8 @@ end
         eval_if(exp, env)
       elsif letrec?(exp) then
         eval_letrec(exp, env)
+      elsif define?(exp) then
+        eval_define(exp, env)
       end
     end
 
@@ -123,8 +125,55 @@ end
       [params, values]
     end
 
+    def eval_define(exp, env)
+      if define_with_param?(exp) then
+        var, val = define_with_param_to_var_val(exp)
+      else
+        var, val = define_to_var_val(exp)
+      end
+      val = eval(val, env)
+      define!(var, val, env)
+      [var, val]
+    end
+
+    def define_with_param?(exp)
+      list?(exp[1])
+    end
+
+    def define_with_param_to_var_val(exp)
+      var = car(exp[1])
+      params = exp[1][1..-1]
+      body = exp[2]
+      val = [:lambda, params, body]
+      [var, val]
+    end
+
+    def define_to_var_val(exp)
+      var = exp[1]
+      val = exp[2]
+      [var, val]
+    end
+
+    def define!(var, val, env)
+      bind_hash = lookup_bind_hash(var, env)
+      if bind_hash.nil? then
+        extend_env!([var], [val], env)
+      else
+        bind_hash[var] = val
+      end
+    end
+
+    def lookup_bind_hash(var, env)
+      env.find{|h| h.key?(var)}
+    end
+
+    def extend_env!(vars, vals, env)
+      bind_hash = create_bind_hash(vars, vals)
+      env.unshift(bind_hash)
+    end
+
     def special_form?(exp)
-      lambda?(exp) || let?(exp) || if?(exp) || letrec?(exp)
+      lambda?(exp) || let?(exp) || if?(exp) || letrec?(exp) || define?(exp)
     end
 
     def lambda?(exp)
@@ -141,6 +190,10 @@ end
 
     def letrec?(exp)
       car(exp) == :letrec
+    end
+
+    def define?(exp)
+      car(exp) == :define
     end
 
     def immidiate_value?(exp)
@@ -259,19 +312,49 @@ def eval_print(string)
 end
 
 eval_print("
-(letrec ((fact 
-         (lambda (x)
-                 (if (= x 0)
-                     1
-                     (* x (fact (- x 1)))))))
-  (fact 10))
+(define one 1)
 ")
 
 eval_print("
-(letrec ((fact 
-         (lambda (x)
-                 (if (= x 0)
-                     1
-                     (* x (fact (- x 1)))))))
-  (fact 100))
+one
 ")
+
+eval_print("
+(define (fact n)
+  (if (= n 0)
+      1
+      (* n (fact (- n 1)))))
+")
+
+eval_print("
+(fact 10)
+")
+
+eval_print("
+(define (fib n)
+  (if (<= n 2)
+      1
+      (+ (fib (- n 2)) (fib (- n 1)))))
+")
+
+eval_print("
+(fib 15)
+")
+
+# eval_print("
+# (letrec ((fact 
+#          (lambda (x)
+#                  (if (= x 0)
+#                      1
+#                      (* x (fact (- x 1)))))))
+#   (fact 10))
+# ")
+
+# eval_print("
+# (letrec ((fact 
+#          (lambda (x)
+#                  (if (= x 0)
+#                      1
+#                      (* x (fact (- x 1)))))))
+#   (fact 100))
+# ")
