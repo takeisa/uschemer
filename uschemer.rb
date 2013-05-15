@@ -306,40 +306,62 @@ def eval_print(string)
   print string
   exp = USchemeR.parse(string)
   result = USchemeR.eval(exp, @env)
-  print " #=> "
+  print " ;=> "
   print PP.pp(result, '')
   print "\n"
 end
 
 eval_print("
-(define one 1)
+(define Y
+  (lambda (f)
+    ((lambda (g)
+       (f (lambda (arg) ((g g) arg))))
+     (lambda (g)
+       (f (lambda (arg) ((g g) arg)))))))
 ")
 
 eval_print("
-one
+(define fact
+  (lambda (f)
+    (lambda (n)
+      (if (= n 0)
+          1
+          (* n (f (- n 1)))))))
 ")
 
 eval_print("
-(define (fact n)
-  (if (= n 0)
-      1
-      (* n (fact (- n 1)))))
+((Y fact) 10)
 ")
 
-eval_print("
-(fact 10)
-")
+# eval_print("
+# (define one 1)
+# ")
 
-eval_print("
-(define (fib n)
-  (if (<= n 2)
-      1
-      (+ (fib (- n 2)) (fib (- n 1)))))
-")
+# eval_print("
+# one
+# ")
 
-eval_print("
-(fib 15)
-")
+# eval_print("
+# (define (fact n)
+#   (if (= n 0)
+#       1
+#       (* n (fact (- n 1)))))
+# ")
+
+# eval_print("
+# (fact 10)
+# ")
+
+# eval_print("
+# (define (fib n)
+#   (if (<= n 2)
+#       1
+#       (+ (fib (- n 2)) (fib (- n 1)))))
+# ")
+
+# eval_print("
+# (fib 15)
+# ")
 
 # eval_print("
 # (letrec ((fact 
