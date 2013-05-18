@@ -25,15 +25,35 @@ def test_parse_stdin
   print Parser.new(Lexer.new(STDIN)).parse
 end
 
-test_parse_stdin
-
 eval_print("
-(define (hello) \"こんにちは、世界\")
+(define (abs x)
+  (cond ((< x 0) (* -1 x))
+        ((= x 0) 0)
+        (else x)))
 ")
 
 eval_print("
-(hello)
+(abs -10)
 ")
+
+eval_print("
+(abs 0)
+")
+
+eval_print("
+(abs 10)
+")
+
+
+# test_parse_stdin
+
+# eval_print("
+# (define (hello) \"こんにちは、世界\")
+# ")
+
+# eval_print("
+# (hello)
+# ")
 
 # eval_print("
 # (define Y

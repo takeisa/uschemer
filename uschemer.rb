@@ -56,6 +56,8 @@ end
         eval_letrec(exp, env)
       elsif define?(exp) then
         eval_define(exp, env)
+      elsif cond?(exp) then
+        eval_cond(exp, env)
       end
     end
 
@@ -174,8 +176,24 @@ end
       env.unshift(bind_hash)
     end
 
+    def eval_cond(exp, env)
+      pred_exp_list = cond_to_pre_exp_list(exp)
+      pred_exp_list.each do |pred_exp|
+        pred, exp = pred_exp
+        if pred == :else || eval(pred, env) then
+          return eval(exp, env)
+        end
+      end
+      raise "cond: not match conditions"
+    end
+
+    def cond_to_pre_exp_list(exp)
+      exp[1..-1]
+    end
+
     def special_form?(exp)
-      lambda?(exp) || let?(exp) || if?(exp) || letrec?(exp) || define?(exp)
+      lambda?(exp) || let?(exp) || if?(exp) || letrec?(exp) || 
+        define?(exp) || cond?(exp)
     end
 
     def lambda?(exp)
@@ -196,6 +214,10 @@ end
 
     def define?(exp)
       car(exp) == :define
+    end
+
+    def cond?(exp)
+      car(exp) == :cond
     end
 
     def immidiate_value?(exp)
