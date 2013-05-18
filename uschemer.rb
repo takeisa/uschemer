@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 
+require './parser'
+
 module USchemeR
   DEBUG = false
 
@@ -197,7 +199,7 @@ end
     end
 
     def immidiate_value?(exp)
-      number?(exp)
+      number?(exp) || string?(exp)
     end
 
     def lookup_var(exp, env)
@@ -277,6 +279,10 @@ end
       value.is_a?(Numeric)
     end
 
+    def string?(value)
+      value.is_a?(String)
+    end
+
     def car(exp)
       exp[0]
     end
@@ -285,98 +291,6 @@ end
       exp[1..-1]
     end
 
-    def parse(sexp)
-      sexp.strip!
-      sexp.gsub!(/[_a-zA-Z\+\*\-\/<>=][_a-zA-Z0-9\+\*\-\/<>=]*/, ":'\\0'")
-      sexp.gsub!(/\s+/, ',')
-      sexp.gsub!(/\(/, '[')
-      sexp.gsub!(/\)/, ']')
-      Kernel.eval(sexp)
-    end
   end
 end
 
-# test code
-
-require "pp"
-
-@env = [USchemeR::KEYWORDS, USchemeR::FUNCS]
-
-def eval_print(string)
-  print string
-  exp = USchemeR.parse(string)
-  result = USchemeR.eval(exp, @env)
-  print " ;=> "
-  print PP.pp(result, '')
-  print "\n"
-end
-
-eval_print("
-(define Y
-  (lambda (f)
-    ((lambda (g)
-       (f (lambda (arg) ((g g) arg))))
-     (lambda (g)
-       (f (lambda (arg) ((g g) arg)))))))
-")
-
-eval_print("
-(define fact
-  (lambda (f)
-    (lambda (n)
-      (if (= n 0)
-          1
-          (* n (f (- n 1)))))))
-")
-
-eval_print("
-((Y fact) 10)
-")
-
-# eval_print("
-# (define one 1)
-# ")
-
-# eval_print("
-# one
-# ")
-
-# eval_print("
-# (define (fact n)
-#   (if (= n 0)
-#       1
-#       (* n (fact (- n 1)))))
-# ")
-
-# eval_print("
-# (fact 10)
-# ")
-
-# eval_print("
-# (define (fib n)
-#   (if (<= n 2)
-#       1
-#       (+ (fib (- n 2)) (fib (- n 1)))))
-# ")
-
-# eval_print("
-# (fib 15)
-# ")
-
-# eval_print("
-# (letrec ((fact 
-#          (lambda (x)
-#                  (if (= x 0)
-#                      1
-#                      (* x (fact (- x 1)))))))
-#   (fact 10))
-# ")
-
-# eval_print("
-# (letrec ((fact 
-#          (lambda (x)
-#                  (if (= x 0)
-#                      1
-#                      (* x (fact (- x 1)))))))
-#   (fact 100))
-# ")
