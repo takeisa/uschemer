@@ -27,7 +27,7 @@ end
 
 eval_print("
 (define (abs x)
-  (cond ((< x 0) (* -1 x))
+  (cond ((< x 0) (- x))
         ((= x 0) 0)
         (else x)))
 ")

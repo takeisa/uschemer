@@ -8,7 +8,7 @@ module USchemeR
 
   FUNCS = {
     :+ => [:built_in, lambda {|x, y| x + y}],
-    :- => [:built_in, lambda {|x, y| x - y}],
+    :- => [:built_in, lambda {|*x| x.reduce(0) {|a, x| a - x}}],
     :* => [:built_in, lambda {|x, y| x * y}],
     :'/' => [:built_in, lambda {|x, y| x / y}],
     :'=' => [:built_in, lambda {|x, y| x == y}],
