@@ -5,11 +5,11 @@ require 'stringio'
 require './parser'
 
 class USchemeR
-  DEBUG = true
+  DEBUG = false
   
   FUNCS = {
     :+ => [:built_in, lambda {|x, y| x + y}],
-    :- => [:built_in, lambda {|*x| x.reduce(0) {|a, x| a - x}}],
+    :- => [:built_in, lambda {|*x| if x.size == 1 then -x[0] else x.reduce {|a, x| a - x} end}],
     :* => [:built_in, lambda {|x, y| x * y}],
     :'/' => [:built_in, lambda {|x, y| x / y}],
     :'=' => [:built_in, lambda {|x, y| x == y}],

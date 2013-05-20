@@ -26,5 +26,5 @@ eval_print("
 ")
 
 eval_print("
-(fact 1)
+(fact 10)
 ")
