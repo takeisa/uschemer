@@ -8,15 +8,15 @@ class USchemeR
   DEBUG = false
   
   FUNCS = {
-    :+ => [:built_in, lambda {|x, y| x + y}],
-    :- => [:built_in, lambda {|*x| if x.size == 1 then -x[0] else x.reduce {|a, x| a - x} end}],
-    :* => [:built_in, lambda {|x, y| x * y}],
-    :'/' => [:built_in, lambda {|x, y| x / y}],
-    :'=' => [:built_in, lambda {|x, y| x == y}],
-    :< => [:built_in, lambda {|x, y| x < y}],
-    :> => [:built_in, lambda {|x, y| x > y}],
-    :<= => [:built_in, lambda {|x, y| x <= y}],
-    :>= => [:built_in, lambda {|x, y| x >= y}]
+    :+ => [:primitive, lambda {|*xs| xs.reduce(0) {|a, x| a + x}}],
+    :- => [:primitive, lambda {|*xs| if xs.size == 1 then -xs[0] else xs.reduce {|a, x| a - x} end}],
+    :* => [:primitive, lambda {|*xs| xs.reduce(1) {|a, x| a * x}}],
+    :'/' => [:primitive, lambda {|*xs| if xs.size == 1 then 1 / xs[0] else xs.reduce {|a, x| a / x} end}],
+    :'=' => [:primitive, lambda {|x, y| x == y}],
+    :< => [:primitive, lambda {|x, y| x < y}],
+    :> => [:primitive, lambda {|x, y| x > y}],
+    :<= => [:primitive, lambda {|x, y| x <= y}],
+    :>= => [:primitive, lambda {|x, y| x >= y}]
   }
   
   KEYWORDS = {
@@ -244,15 +244,15 @@ class USchemeR
       
       args = eval_list(cdr(exp), env)
       
-      if built_in?(func) then
+      if primitive?(func) then
         func_apply(func, args)
       else
         lambda_apply(func, args)
       end
     end
     
-    def built_in?(func)
-      func[0] == :built_in
+    def primitive?(func)
+      func[0] == :primitive
     end
     
     def func_apply(func, args)

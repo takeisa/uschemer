@@ -45,7 +45,7 @@ class Lexer
       end
 
       t.match(/(?:(?:-?[1-9][0-9]*)|0)(?:\.[0-9]+)?/) do |val|
-        Token.new(:numeric, eval(val))
+        Token.new(:numeric, Kernel::eval(val))
       end
 
       t.match(/"([^"]*)"/) do |val|
