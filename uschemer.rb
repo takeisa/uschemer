@@ -59,6 +59,12 @@ class USchemeR
         eval_define(exp, env)
       elsif cond?(exp) then
         eval_cond(exp, env)
+      elsif and?(exp) then
+        eval_and(exp, env)
+      elsif or?(exp) then
+        eval_or(exp, env)
+      elsif not?(exp) then
+        eval_not(exp, env)
       end
     end
     
@@ -191,10 +197,46 @@ class USchemeR
     def cond_to_pre_exp_list(exp)
       exp[1..-1]
     end
+
+    def eval_and(exp, env)
+      exp_list = and_to_exp_list(exp)
+      last_exp = nil
+      exp_list.each do |exp|
+        last_exp = eval(exp, env)
+        return false unless last_exp
+      end
+      last_exp
+    end
+
+    def and_to_exp_list(exp)
+      exp[1..-1]
+    end
     
+    def eval_or(exp, env)
+      exp_list = or_to_exp_list(exp)
+      exp_list.each do |exp|
+        last_exp = eval(exp, env)
+        return last_exp if last_exp
+      end
+      false
+    end
+
+    def or_to_exp_list(exp)
+      exp[1..-1]
+    end
+
+    def eval_not(exp, env)
+      exp = not_to_exp(exp)
+      not eval(exp, env)
+    end
+
+    def not_to_exp(exp)
+      exp[1]
+    end
+
     def special_form?(exp)
       lambda?(exp) || let?(exp) || if?(exp) || letrec?(exp) || 
-        define?(exp) || cond?(exp)
+        define?(exp) || cond?(exp) || and?(exp) || or?(exp) || not?(exp)
     end
     
     def lambda?(exp)
@@ -221,6 +263,18 @@ class USchemeR
       car(exp) == :cond
     end
     
+    def and?(exp)
+      car(exp) == :and
+    end
+
+    def or?(exp)
+      car(exp) == :or
+    end
+
+    def not?(exp)
+      car(exp) == :not
+    end
+
     def immidiate_value?(exp)
       number?(exp) || string?(exp)
     end
