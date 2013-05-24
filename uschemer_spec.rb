@@ -141,3 +141,81 @@ describe 'not' do
     it { eval("(not 1)", @env).should eq false }
   end
 end
+
+describe 'let' do
+  before do
+    @env = [USchemeR::KEYWORDS, USchemeR::FUNCS]
+  end
+
+  context 'var bind' do
+    it { eval("(let ((a 1) (b 2)) (+ a b))", @env).should eq 3 }
+  end
+end
+
+describe 'if' do
+  before do
+    @env = [USchemeR::KEYWORDS, USchemeR::FUNCS]
+  end
+
+  context 'pred true' do
+    it { eval('(if true "true" "false")', @env).should eq "true" }
+  end
+
+  context 'pred false' do
+    it { eval('(if false "true" "false")', @env).should eq "false" }
+  end
+end
+
+describe 'lambda' do
+  before do
+    @env = [USchemeR::KEYWORDS, USchemeR::FUNCS]
+  end
+
+  context 'function' do
+    it { eval('((lambda (a b) (+ a b)) 1 2)', @env).should eq 3 }
+  end
+end
+
+describe 'letrec' do
+  before do
+    @env = [USchemeR::KEYWORDS, USchemeR::FUNCS]
+  end
+
+  context 'recursive' do
+    it { eval('(letrec ((fact (lambda (n) (if (= n 0) 1 (* n (fact (- n 1))))))) (fact 5))', @env).should eq 120 }
+  end
+end
+
+describe 'define' do
+  before do
+    @env = [USchemeR::KEYWORDS, USchemeR::FUNCS]
+    eval('(define a 123)', @env)
+    eval('(define (add a b) (+ a b))', @env)
+  end
+
+  context 'define var' do
+    it { eval('a', @env).should eq 123 }
+  end
+
+  context 'define function' do
+    it { eval('(add 1 2)', @env).should eq 3 }
+  end
+end
+
+describe 'cond' do
+  before do
+    @env = [USchemeR::KEYWORDS, USchemeR::FUNCS]
+  end
+
+  context 'match first' do
+    it { eval('(cond (true 1) (false 2) (else 3))', @env).should eq 1 }
+  end
+
+  context 'match second' do
+    it { eval('(cond (false 1) (true 2) (else 3))', @env).should eq 2 }
+  end
+
+  context 'not match' do
+    it { eval('(cond (false 1) (false 2) (else 3))', @env).should eq 3 }
+  end
+end
